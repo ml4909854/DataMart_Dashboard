@@ -10,11 +10,11 @@ const api = axios.create({
     }
 });
 
-export const getProducts = async (params = {}) => {
+export const getProducts = async (params = {}, signal) => {
     try {
         console.log('📡 API Request params:', params);
         
-        const response = await api.get('/products', { params });
+        const response = await api.get('/products', { params, signal });
         
         return {
             data: response.data.data || [],
@@ -26,6 +26,14 @@ export const getProducts = async (params = {}) => {
             }
         };
     } catch (error) {
+        // ✅ FIXED: Don't throw CanceledError, just return empty
+        if (axios.isCancel(error) || error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+            console.log('📡 Request was cancelled');
+            return {
+                data: [],
+                pagination: { total: 0, page: 1, limit: 20, totalPages: 0 }
+            };
+        }
         console.error('❌ API Error:', error);
         throw error;
     }

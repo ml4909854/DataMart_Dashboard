@@ -1,18 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, lazy, Suspense } from "react"; // ✅ useMemo, lazy, Suspense add kiye
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from "lucide-react";
 import ProductList from "../components/ProductList/ProductList";
 import SearchBar from "../components/Filters/SearchBar";
-import FilterBar from "../components/Filters/FilterBar";
 import { useProducts } from "../hooks/useProducts";
 import "./Dashboard.css";
 
+// ✅ Lazy load FilterBar
+const FilterBar = lazy(() => import("../components/Filters/FilterBar"));
+
 const Dashboard = () => {
   const {
-    products = [], // ✅ Default value
+    products = [],
     loading = false,
     error = null,
     hasMore = false,
-    total = 0, // ✅ Default value
+    total = 0,
     loadMore,
     updateFilters,
     filters = {},
@@ -27,40 +29,42 @@ const Dashboard = () => {
     sortOrder: "desc",
   });
 
-  // ✅ Safe calculation with checks
-  const avgPrice =
-    products && products.length > 0
-      ? (
-          products.reduce((sum, p) => sum + (p.price || 0), 0) / products.length
-        ).toFixed(2)
+  const avgPrice = useMemo(() => {
+    return products && products.length > 0
+      ? (products.reduce((sum, p) => sum + (p.price || 0), 0) / products.length).toFixed(2)
       : "0.00";
+  }, [products]);
 
-  const avgRating =
-    products && products.length > 0
-      ? (
-          products.reduce((sum, p) => sum + (p.rating || 0), 0) /
-          products.length
-        ).toFixed(1)
+  const avgRating = useMemo(() => {
+    return products && products.length > 0
+      ? (products.reduce((sum, p) => sum + (p.rating || 0), 0) / products.length).toFixed(1)
       : "0.0";
+  }, [products]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters?.search) count++;
+    if (filters?.category) count++;
+    if (filters?.minPrice) count++;
+    if (filters?.maxPrice) count++;
+    if (filters?.sortBy && filters.sortBy !== "created_at") count++;
+    if (filters?.sortOrder && filters.sortOrder !== "desc") count++;
+    return count;
+  }, [filters]);
 
   // Search handler
-  // In Dashboard.jsx, update handleSearch function:
-
-  // Search handler
-const handleSearch = (searchData) => {
+  const handleSearch = (searchData) => {
     console.log('🔍 Search data received:', searchData);
     
     if (searchData.term === '') {
-        // Clear search
-        updateFilters({ search: '', searchType: 'all' });
+      updateFilters({ search: '', searchType: 'all' });
     } else {
-        // Apply search with type
-        updateFilters({ 
-            term: searchData.term,
-            type: searchData.type 
-        });
+      updateFilters({ 
+        term: searchData.term,
+        type: searchData.type 
+      });
     }
-};
+  };
 
   // Filter handler
   const handleFilterChange = (newFilters) => {
@@ -79,18 +83,6 @@ const handleSearch = (searchData) => {
     };
     setLocalFilters(resetValues);
     updateFilters(resetValues);
-  };
-
-  // Get active filter count
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (filters?.search) count++;
-    if (filters?.category) count++;
-    if (filters?.minPrice) count++;
-    if (filters?.maxPrice) count++;
-    if (filters?.sortBy && filters.sortBy !== "created_at") count++;
-    if (filters?.sortOrder && filters.sortOrder !== "desc") count++;
-    return count;
   };
 
   if (error) {
@@ -159,18 +151,20 @@ const handleSearch = (searchData) => {
           >
             <SlidersHorizontal size={20} />
             <span>Filters</span>
-            {getActiveFilterCount() > 0 && (
-              <span className="filter-badge">{getActiveFilterCount()}</span>
+            {activeFilterCount > 0 && (
+              <span className="filter-badge">{activeFilterCount}</span>
             )}
             {showFilters ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
 
-          {/* Filter Bar Component */}
+          {/* ✅ Lazy loaded FilterBar with Suspense */}
           {showFilters && (
-            <FilterBar
-              onFilterChange={handleFilterChange}
-              initialFilters={localFilters}
-            />
+            <Suspense fallback={<div className="filter-skeleton">Loading filters...</div>}>
+              <FilterBar
+                onFilterChange={handleFilterChange}
+                initialFilters={localFilters}
+              />
+            </Suspense>
           )}
         </div>
 
