@@ -1,0 +1,41 @@
+.product-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.back-btn {
+    padding: 10px 20px;
+    background-color: #64748b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.back-btn:hover {
+    background-color: #475569;
+}
+
+.product-detail {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.product-detail h1 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+.product-info p {
+    margin: 15px 0;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.product-info p:last-child {
+    border-bottom: none;
+}
